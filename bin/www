@@ -8,11 +8,13 @@ var app = require('../app');
 var debug = require('debug')('viber-feedback-bot:server');
 const https = require('https');
 const fs = require('fs');
+const fetch = require('node-fetch');
 
 require('dotenv').config();
 
 const ViberBot = require('viber-bot').Bot;
 const BotEvents = require('viber-bot').Events;
+const TextMessage = require('viber-bot').Message.Text;
 
 const bot = new ViberBot({
   authToken: process.env.TOKEN,
@@ -20,7 +22,7 @@ const bot = new ViberBot({
   avatar: "http://viber.com/avatar.jpg" // It is recommended to be 720x720, and no more than 100kb.
 });
 
-bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
+bot.on(BotEvents.MESSAGE_RECEIVED, async(message, response) => {
 
   console.log('----------------------------------------------------------------');
   console.log(`${new Date().toLocaleString('ru')} New message: `, message.text);
@@ -29,7 +31,16 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
 
   bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New message from user: ${response.userProfile.id} ${response.userProfile.name}: ${message.text}`));
 
-  response.send(message);
+  const savingUserRequestResult = await sendMessageData(message.text, response.userProfile.id, response.userProfile.name);
+
+  console.log(`${new Date().toLocaleString('ru')} savingUserRequestResult: `, savingUserRequestResult);
+
+  if('errorText' in savingUserRequestResult) {
+    response.send(new TextMessage(savingUserRequestResult.errorText));
+  } else {
+    response.send(new TextMessage(`Ваше сообщение принято под номером ${savingUserRequestResult.requestNumber}`));
+  }
+  
 });
 
 /**
@@ -122,3 +133,34 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+const sendMessageData = async(text, viberUserId, viberUserName) => {
+
+  const url = `${process.env.SERVER_ADDR}addFeedbackMessage`;
+
+  try {
+    return await fetch(url, {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      mode: 'cors', // no-cors, *cors, same-origin
+      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: 'same-origin', // include, *same-origin, omit
+      redirect: 'follow', // manual, *follow, error
+      referrerPolicy: 'no-referrer', // no-referrer, *client
+      body: JSON.stringify({text, viberUserId, viberUserName, st: process.env.SECRET}),
+      headers: {
+        'Content-Type': 'application/json',
+        // 'Authorization': `Bearer ${process.env.SERVER_ADDR}`
+      }})
+        .then((response) => {
+          console.log(`${new Date().toLocaleString('ru')} Sending message data response: `, response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log(`${new Date().toLocaleString('ru')} Sending message response data: `, data);
+          return {requestNumber: data};
+        });
+  } catch (e) {
+    console.error(`${new Date().toLocaleString('ru')} sendMessageData error: `, e);
+    return {errorText: 'Что-то пошло не так, но мы работаем над этим. Ваше сообщение пока не принято, попробуйте позже.'};
+  }
+};

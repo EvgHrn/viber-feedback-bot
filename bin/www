@@ -30,6 +30,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, async(message, response) => {
   console.log('Name: ', response.userProfile.name);
 
   bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New message from user: ${response.userProfile.id} ${response.userProfile.name}: ${message.text}`));
+  bot.sendMessage({id: process.env.DISPATCHER_ID}, new TextMessage(`${response.userProfile.name}: ${message.text}`));
 
   const savingUserRequestResult = await sendMessageData(message.text, response.userProfile.id, response.userProfile.name);
 

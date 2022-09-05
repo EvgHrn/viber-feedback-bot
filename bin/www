@@ -21,7 +21,14 @@ const bot = new ViberBot({
 });
 
 bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
-  // Echo's back the message to the client. Your bot logic should sit here.
+
+  console.log('----------------------------------------------------------------');
+  console.log(`${new Date().toLocaleString('ru')} New message: `, message.text);
+  console.log('From: ', response.userProfile.id, );
+  console.log('Name: ', response.userProfile.name);
+
+  bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New message from user: ${response.userProfile.id} ${response.userProfile.name}: ${message.text}`));
+
   response.send(message);
 });
 
@@ -53,7 +60,6 @@ console.log(`${new Date().toLocaleString('ru')} Server created: `, server);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 

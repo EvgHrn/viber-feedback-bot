@@ -40,7 +40,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, async(message, response) => {
   } else {
     response.send(new TextMessage(`Ваше сообщение принято под номером ${savingUserRequestResult.requestNumber}`));
   }
-  
+
 });
 
 /**

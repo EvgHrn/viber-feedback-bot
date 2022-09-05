@@ -22,6 +22,16 @@ const bot = new ViberBot({
   avatar: "http://viber.com/avatar.jpg" // It is recommended to be 720x720, and no more than 100kb.
 });
 
+bot.on(BotEvents.SUBSCRIBED, async(response) => {
+
+  console.log('----------------------------------------------------------------');
+  console.log(`${new Date().toLocaleString('ru')} New user subscribed: `, response.userProfile);
+
+  bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New user subscribed: ${response.userProfile.id} ${response.userProfile.name}`));
+
+  response.send(new TextMessage(`Привет, это бот жалоб и предложений компании "Инари".\n\rЗдесь ты можешь писать претензии и предложения, которые касаются твоей работы в компании от непосредственно рабочих моментов, до жизнедеятельности компании в целом.\n\rКаждому сообщению будет присвоен номер. Эту информацию будет рассматривать руководство компании. Желательно в сообщении уточнить от кого оно, так как будет виден только твой ник, и описывать всё как можно подробнее.\n\rУлучшим компанию вместе!`));
+});
+
 bot.on(BotEvents.MESSAGE_RECEIVED, async(message, response) => {
 
   console.log('----------------------------------------------------------------');
@@ -42,16 +52,6 @@ bot.on(BotEvents.MESSAGE_RECEIVED, async(message, response) => {
     response.send(new TextMessage(`Ваше сообщение принято под номером ${savingUserRequestResult.requestNumber}`));
   }
 
-});
-
-bot.on(BotEvents.SUBSCRIBED, async(message, response) => {
-
-  console.log('----------------------------------------------------------------');
-  console.log(`${new Date().toLocaleString('ru')} New user subscribed: `, response.userProfile);
-
-  bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New user subscribed: ${response.userProfile.id} ${response.userProfile.name}`));
-
-  response.send(new TextMessage(`Привет, это бот жалоб и предложений компании "Инари".\n\rЗдесь ты можешь писать претензии и предложения, которые касаются твоей работы в компании от непосредственно рабочих моментов, до жизнедеятельности компании в целом.\n\rКаждому сообщению будет присвоен номер. Эту информацию будет рассматривать руководство компании. Желательно в сообщении уточнить от кого оно, так как будет виден только твой ник, и описывать всё как можно подробнее.\n\rУлучшим компанию вместе!`));
 });
 
 /**

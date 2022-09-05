@@ -157,7 +157,7 @@ const sendMessageData = async(text, viberUserId, viberUserName) => {
         })
         .then((data) => {
           console.log(`${new Date().toLocaleString('ru')} Sending message response data: `, data);
-          return {requestNumber: data};
+          return {requestNumber: data.id};
         });
   } catch (e) {
     console.error(`${new Date().toLocaleString('ru')} sendMessageData error: `, e);

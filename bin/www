@@ -9,6 +9,9 @@ var debug = require('debug')('viber-feedback-bot:server');
 const https = require('https');
 const fs = require('fs');
 const fetch = require('node-fetch');
+var Engine = require('tingodb')();
+
+var db = new Engine.Db('./', {});
 
 require('dotenv').config();
 
@@ -16,13 +19,15 @@ const ViberBot = require('viber-bot').Bot;
 const BotEvents = require('viber-bot').Events;
 const TextMessage = require('viber-bot').Message.Text;
 
+const startedConversations = database.collection('startedConversations');
+
 const bot = new ViberBot({
   authToken: process.env.TOKEN,
   name: "Книга жалоб и предложений",
   avatar: "http://viber.com/avatar.jpg" // It is recommended to be 720x720, and no more than 100kb.
 });
 
-bot.onConversationStarted((userProfile, isSubscribed, context, onFinish) => {
+bot.onConversationStarted(async(userProfile, isSubscribed, context, onFinish) => {
   console.log('----------------------------------------------------------------');
   console.log(`${new Date().toLocaleString('ru')} New conversation started with ${userProfile.id} ${userProfile.name}`);
   // console.log(`${new Date().toLocaleString('ru')} userProfile: `, userProfile);
@@ -30,7 +35,23 @@ bot.onConversationStarted((userProfile, isSubscribed, context, onFinish) => {
   // console.log(`${new Date().toLocaleString('ru')} context: `, context);
   // console.log(`${new Date().toLocaleString('ru')} onFinish: `, onFinish);
   if(!isSubscribed) {
-    onFinish(new TextMessage(`Привет, ${userProfile.name}.\n\rЭто бот жалоб и предложений компании "Инари".\n\rЗдесь ты можешь писать претензии и предложения, которые касаются твоей работы в компании от непосредственно рабочих моментов до жизнедеятельности компании в целом.\n\rКаждому сообщению будет присвоен номер. Эту информацию будет рассматривать руководство компании. Желательно в сообщении уточнить от кого оно, так как будет виден только твой ник, и описывать всё как можно подробнее.\n\rУлучшим компанию вместе!`));
+
+    const isHadWelcome = await startedConversations.findOne({
+      viberUserId: userProfile.id
+    });
+
+    if(!isHadWelcome) {
+      console.log(`${new Date().toLocaleString('ru')} First welcome ${userProfile.id} ${userProfile.name}`);
+      onFinish(new TextMessage(`Привет, ${userProfile.name}.\n\rЭто бот жалоб и предложений компании "Инари".\n\rЗдесь ты можешь писать претензии и предложения, которые касаются твоей работы в компании от непосредственно рабочих моментов до жизнедеятельности компании в целом.\n\rКаждому сообщению будет присвоен номер. Эту информацию будет рассматривать руководство компании. Желательно в сообщении уточнить от кого оно, так как будет виден только твой ник, и описывать всё как можно подробнее.\n\rУлучшим компанию вместе!`));
+      const result = await startedConversations.insertOne({
+        viberUserId: userProfile.id,
+        viberUserName: userProfile.name,
+        created_at: new Date().toISOString(),
+      });
+      console.log(`${new Date().toLocaleString('ru')} Started conversation saved on local db with: `, result);
+    } else {
+      console.log(`${new Date().toLocaleString('ru')} Already had welcome ${userProfile.id} ${userProfile.name}`);
+    }
   }
 });
 
@@ -42,7 +63,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, async(message, response) => {
   console.log('Name: ', response.userProfile.name);
 
   bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New message from user: ${response.userProfile.id} ${response.userProfile.name}: ${message.text}`));
-  //bot.sendMessage({id: process.env.DISPATCHER_ID}, new TextMessage(`${response.userProfile.name}: ${message.text}`));
+  bot.sendMessage({id: process.env.DISPATCHER_ID}, new TextMessage(`${response.userProfile.name}: ${message.text}`));
 
   const savingUserRequestResult = await sendMessageData(message.text, response.userProfile.id, response.userProfile.name);
 

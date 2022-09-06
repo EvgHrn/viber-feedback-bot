@@ -22,21 +22,16 @@ const bot = new ViberBot({
   avatar: "http://viber.com/avatar.jpg" // It is recommended to be 720x720, and no more than 100kb.
 });
 
-bot.on(BotEvents.CONVERSATION_STARTED, (userProfile, isSubscribed, context, onFinish) => {
-
+bot.onConversationStarted((userProfile, isSubscribed, context, onFinish) => {
   console.log('----------------------------------------------------------------');
-  console.log(`${new Date().toLocaleString('ru')} New conversation started with: `);
-  console.log(`${new Date().toLocaleString('ru')} userProfile: `, userProfile);
-  console.log(`${new Date().toLocaleString('ru')} isSubscribed: `, isSubscribed);
-  console.log(`${new Date().toLocaleString('ru')} context: `, context);
-  console.log(`${new Date().toLocaleString('ru')} onFinish: `);
-  console.log(onFinish, { depth: null });
-
-  // if(!isSubscribed) {
-    //onFinish(new TextMessage(`onFinish: Привет`));
-    bot.sendMessage({id: userProfile.id}, new TextMessage(`sendMessage: Привет`));
-    bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New unsubscribed conversation: ${userProfile.id} ${userProfile.name}`));
-  // }
+  console.log(`${new Date().toLocaleString('ru')} New conversation started with ${userProfile.id} ${userProfile.name}`);
+  // console.log(`${new Date().toLocaleString('ru')} userProfile: `, userProfile);
+  // console.log(`${new Date().toLocaleString('ru')} isSubscribed: `, isSubscribed);
+  // console.log(`${new Date().toLocaleString('ru')} context: `, context);
+  // console.log(`${new Date().toLocaleString('ru')} onFinish: `, onFinish);
+  if(!isSubscribed) {
+    onFinish(new TextMessage(`Привет, ${userProfile.name}.\n\rЭто бот жалоб и предложений компании "Инари".\n\rЗдесь ты можешь писать претензии и предложения, которые касаются твоей работы в компании от непосредственно рабочих моментов до жизнедеятельности компании в целом.\n\rКаждому сообщению будет присвоен номер. Эту информацию будет рассматривать руководство компании. Желательно в сообщении уточнить от кого оно, так как будет виден только твой ник, и описывать всё как можно подробнее.\n\rУлучшим компанию вместе!`));
+  }
 });
 
 bot.on(BotEvents.MESSAGE_RECEIVED, async(message, response) => {

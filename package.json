@@ -11,7 +11,7 @@
     "debug": "~2.6.9",
     "dotenv": "^16.0.2",
     "express": "~4.16.1",
-    "lowdb": "^3.0.0",
+    "file-system-db": "^1.0.1",
     "morgan": "~1.9.1",
     "node-fetch": "^2.6.5",
     "viber-bot": "^1.0.18"

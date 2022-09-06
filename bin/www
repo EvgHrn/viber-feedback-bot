@@ -9,7 +9,7 @@ var debug = require('debug')('viber-feedback-bot:server');
 const https = require('https');
 const fs = require('fs');
 const fetch = require('node-fetch');
-const { Sequelize } = require('sequelize');
+const { Sequelize, DataTypes  } = require('sequelize');
 
 require('dotenv').config();
 
@@ -40,6 +40,8 @@ const StartedConversation = sequelize.define('StartedConversation', {
   // Other model options go here
 });
 
+// StartedConversation.sync();
+
 const bot = new ViberBot({
   authToken: process.env.TOKEN,
   name: "Книга жалоб и предложений",
@@ -48,14 +50,11 @@ const bot = new ViberBot({
 
 bot.onConversationStarted(async(userProfile, isSubscribed, context, onFinish) => {
   console.log('----------------------------------------------------------------');
-  console.log(`${new Date().toLocaleString('ru')} New conversation started with ${userProfile.id} ${userProfile.name}`);
-  // console.log(`${new Date().toLocaleString('ru')} userProfile: `, userProfile);
-  // console.log(`${new Date().toLocaleString('ru')} isSubscribed: `, isSubscribed);
-  // console.log(`${new Date().toLocaleString('ru')} context: `, context);
-  // console.log(`${new Date().toLocaleString('ru')} onFinish: `, onFinish);
+  console.log(`${new Date().toLocaleString('ru')} New conversation started with ${userProfile.id} ${userProfile.name} ${isSubscribed}`);
+
   if(!isSubscribed) {
 
-    const isHadWelcome = await StartedConversation.findOne({ where: { viberUserId: userProfile.id } });
+    const isHadWelcome = !! await StartedConversation.findOne({ where: { viberUserId: userProfile.id } });
 
     if(!isHadWelcome) {
       console.log(`${new Date().toLocaleString('ru')} First welcome ${userProfile.id} ${userProfile.name}`);
@@ -65,6 +64,7 @@ bot.onConversationStarted(async(userProfile, isSubscribed, context, onFinish) =>
     } else {
       console.log(`${new Date().toLocaleString('ru')} Already had welcome ${userProfile.id} ${userProfile.name}`);
     }
+
   }
 });
 

@@ -9,9 +9,7 @@ var debug = require('debug')('viber-feedback-bot:server');
 const https = require('https');
 const fs = require('fs');
 const fetch = require('node-fetch');
-const FSDB = require("file-system-db");
-
-const db = new FSDB("./db.json", false);
+const { Sequelize } = require('sequelize');
 
 require('dotenv').config();
 
@@ -19,7 +17,28 @@ const ViberBot = require('viber-bot').Bot;
 const BotEvents = require('viber-bot').Events;
 const TextMessage = require('viber-bot').Message.Text;
 
-// const startedConversations = db.collection('startedConversations');
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: './database.sqlite'
+});
+
+const StartedConversation = sequelize.define('StartedConversation', {
+  // Model attributes are defined here
+  viberUserName: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  viberUserId: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  created_at: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+}, {
+  // Other model options go here
+});
 
 const bot = new ViberBot({
   authToken: process.env.TOKEN,
@@ -36,13 +55,13 @@ bot.onConversationStarted(async(userProfile, isSubscribed, context, onFinish) =>
   // console.log(`${new Date().toLocaleString('ru')} onFinish: `, onFinish);
   if(!isSubscribed) {
 
-    const isHadWelcome = db.has(userProfile.id);
+    const isHadWelcome = await StartedConversation.findOne({ where: { viberUserId: userProfile.id } });
 
     if(!isHadWelcome) {
       console.log(`${new Date().toLocaleString('ru')} First welcome ${userProfile.id} ${userProfile.name}`);
       onFinish(new TextMessage(`Привет, ${userProfile.name}.\n\rЭто бот жалоб и предложений компании "Инари".\n\rЗдесь ты можешь писать претензии и предложения, которые касаются твоей работы в компании от непосредственно рабочих моментов до жизнедеятельности компании в целом.\n\rКаждому сообщению будет присвоен номер. Эту информацию будет рассматривать руководство компании. Желательно в сообщении уточнить от кого оно, так как будет виден только твой ник, и описывать всё как можно подробнее.\n\rУлучшим компанию вместе!`));
-      db.set(userProfile.id, { viberUserName: userProfile.name, created_at: new Date().toISOString() });
-      console.log(`${new Date().toLocaleString('ru')} Started conversation saved on local db`);
+      const conversation = await StartedConversation.create({ viberUserId: userProfile.id, viberUserName: userProfile.name, created_at: new Date().toISOString() });
+      console.log(`${new Date().toLocaleString('ru')} Started conversation saved on local db: `, conversation);
     } else {
       console.log(`${new Date().toLocaleString('ru')} Already had welcome ${userProfile.id} ${userProfile.name}`);
     }

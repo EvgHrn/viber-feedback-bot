@@ -9,32 +9,24 @@ var debug = require('debug')('viber-feedback-bot:server');
 const https = require('https');
 const fs = require('fs');
 const fetch = require('node-fetch');
-var lowdb = require('lowdb');
-var path = require('path');
-var url = require('url');
 
-// var Low = lowdb.Low;
-// var JSONFile = lowdb.JSONFile;
-// var join = path.join;
-// var dirname = path.dirname;
-// var fileURLToPath = url.fileURLToPath;
+import { join, dirname } from 'path'
+import { Low, JSONFile } from 'lowdb'
+import { fileURLToPath } from 'url'
 
-// import { join, dirname } from 'path'
-// import { Low, JSONFile } from 'lowdb'
-// import { fileURLToPath } from 'url'
-
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+//const __dirname = dirname(fileURLToPath(import.meta.url));
 // Use JSON file for storage
-const file = path.join(__dirname, 'db.json');
-const adapter = new lowdb.JSONFile(file);
-const db = new lowdb.Low(adapter);
+const file = join(__dirname, 'db.json');
+const adapter = new JSONFile(file);
+const db = new Low(adapter);
 
 // Read data from JSON file, this will set db.data content
-(async() => {
+(async () => {
   await db.read();
 })();
-
-db.data ||= { startedConversations: [] };
+ if(!db.data) {
+   db.data = { startedConversations: [] };
+ }
 
 require('dotenv').config();
 
@@ -42,7 +34,7 @@ const ViberBot = require('viber-bot').Bot;
 const BotEvents = require('viber-bot').Events;
 const TextMessage = require('viber-bot').Message.Text;
 
-const startedConversations = db.collection('startedConversations');
+// const startedConversations = db.collection('startedConversations');
 
 const bot = new ViberBot({
   authToken: process.env.TOKEN,

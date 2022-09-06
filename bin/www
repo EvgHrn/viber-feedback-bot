@@ -28,7 +28,8 @@ bot.on(BotEvents.CONVERSATION_STARTED, (userProfile, isSubscribed, context, onFi
   console.log(`${new Date().toLocaleString('ru')} New conversation started: `, userProfile, isSubscribed, context);
 
   // if(!isSubscribed) {
-    onFinish(new TextMessage(`Привет`));
+    onFinish(new TextMessage(`onFinish: Привет`));
+    bot.sendMessage({id: userProfile.id}, new TextMessage(`sendMessage: Привет`));
     bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New unsubscribed conversation: ${userProfile.id} ${userProfile.name}`));
   // }
 });

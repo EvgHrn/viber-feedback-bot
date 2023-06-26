@@ -71,9 +71,15 @@ const bot = new ViberBot({
 bot.on(BotEvents.MESSAGE_RECEIVED, async(message, response) => {
 
   console.log('----------------------------------------------------------------');
-  console.log(`${new Date().toLocaleString('ru')} New message: `, message.text);
+  console.log(`${new Date().toLocaleString('ru')} New message: `, ('text' in message) ? message.text : message);
   console.log('From: ', response.userProfile.id, );
   console.log('Name: ', response.userProfile.name);
+
+  if(!('text' in message) || !message.text) {
+    response.send(new TextMessage(`Допустимы только текстовые сообщения`));
+    bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New message without text from user: ${response.userProfile.id} ${response.userProfile.name}: ${ JSON.stringify(message) }`));
+    return;
+  }
 
   bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New message from user: ${response.userProfile.id} ${response.userProfile.name}: ${message.text}`));
 
